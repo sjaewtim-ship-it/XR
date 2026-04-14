@@ -28,7 +28,7 @@ function rowToMember(row: MemberRow | null): Member | null {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<View>('management');
+  const [currentView, setCurrentView] = useState<View>('purchase');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   
   // 全局 loading / toast 状态
@@ -207,8 +207,8 @@ export default function App() {
         />
       )}
 
-      {/* View Switcher for Demo Purposes */}
-      <div className="fixed bottom-4 left-4 flex gap-2 z-[100] bg-surface-highest/80 backdrop-blur-md p-2 rounded-lg border border-primary/20">
+      {/* View Switcher for Demo Purposes - 已隐藏，需开发时可取消注释 */}
+      {/* <div className="fixed bottom-4 left-4 flex gap-2 z-[100] bg-surface-highest/80 backdrop-blur-md p-2 rounded-lg border border-primary/20">
         <button
           onClick={() => setCurrentView('management')}
           className={`px-3 py-1 text-[10px] rounded ${currentView === 'management' ? 'bg-primary text-background' : 'text-primary'}`}
@@ -227,13 +227,7 @@ export default function App() {
         >
           用户端-购买
         </button>
-        <button
-          onClick={() => selectedMember && setCurrentView('home')}
-          className={`px-3 py-1 text-[10px] rounded ${currentView === 'home' ? 'bg-primary text-background' : 'text-primary'}`}
-        >
-          用户端-首页
-        </button>
-      </div>
+      </div> */}
     </div>
   );
 }
