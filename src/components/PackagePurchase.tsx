@@ -147,23 +147,23 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
           <div className="bg-surface-lowest/50 rounded-xl p-5 space-y-4">
             <p className="text-sm text-primary font-medium">包含体验项目：</p>
             <ul className="grid grid-cols-1 gap-3">
-              {['埃菲尔铁塔云游记', '恐龙时代大冒险', '火星基地生存指南', '深海两万里沉浸探秘'].map((item) => (
+              {['埃菲尔铁塔云游记', '恐龙时代大冒险', '嫦娥探月大冒险', '深海寻宝大冒险', '万里长城大作战', '烈火逃生大冒险'].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-on-surface-variant text-sm">
-                  <CheckCircle className="w-5 h-5 text-secondary fill-secondary/10" />
+                  <span className="text-secondary font-bold">✔</span>
                   {item}
                 </li>
               ))}
             </ul>
             <div className="pt-4 mt-2 border-t border-outline-variant/30 flex items-start gap-2">
               <Info className="w-4 h-4 text-outline mt-0.5" />
-              <p className="text-[12px] text-outline leading-relaxed">说明：主题任选，每次扣减1次。本套餐一经售出，支持线上预约使用。</p>
+              <p className="text-[12px] text-outline leading-relaxed">说明：主题任选，每次扣减1次。本套餐一经售出，支持线下体验使用。</p>
             </div>
           </div>
         </section>
 
         <section className="flex items-end justify-between px-2 pt-4">
           <div className="space-y-1">
-            <p className="text-xs text-on-surface-variant uppercase tracking-widest">Membership Fee</p>
+            <p className="text-xs text-on-surface-variant uppercase tracking-widest">套餐价格</p>
             <div className="flex items-baseline gap-1">
               <span className="text-secondary font-headline text-2xl font-bold">¥</span>
               <span className="text-secondary font-headline text-5xl font-extrabold tracking-tighter">198</span>
@@ -172,7 +172,7 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
           <div className="text-right pb-1">
             <div className="inline-flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_#a9c7ff]" />
-              <span className="text-primary text-[12px] font-bold">有效期：长期有效</span>
+              <span className="text-primary text-[12px] font-bold">长期有效</span>
             </div>
           </div>
         </section>

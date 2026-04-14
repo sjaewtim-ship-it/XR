@@ -71,7 +71,6 @@ export default function MemberHome({ member, onBuyPackage, onGetRecords, onRefre
             <ShoppingCart className="w-6 h-6 fill-on-background" />
             购买套餐
           </button>
-          <p className="text-center text-on-surface-variant/60 text-xs mt-4">新用户首单立减 ¥50 · 支持数字地球通兑</p>
         </section>
 
         <section className="mt-12 mb-10">
