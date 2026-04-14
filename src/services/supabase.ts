@@ -4,9 +4,41 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { supabaseConfig } from '../config';
 
+// ============================================
+// 环境变量读取 + 安全校验
+// ============================================
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('YOUR_PROJECT') || supabaseKey.includes('YOUR_ANON')) {
+  throw new Error('Supabase 环境变量未配置或仍为占位符，请检查 .env 文件');
+}
+
+// Supabase 客户端（单例）
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ============================================
+// 连接验证（仅开发环境）
+// ============================================
+(async function verifyConnection() {
+  if (import.meta.env.VITE_APP_ENV === 'prod') return;
+  try {
+    const { data, error } = await supabase.from('members').select('count', { count: 'exact', head: true });
+    if (error) {
+      console.warn('⚠️ Supabase 连接警告:', error.message);
+      console.warn('请确认已在 Supabase 项目中建好 members 表');
+    } else {
+      console.log('✅ Supabase 连接成功 | URL:', supabaseUrl);
+    }
+  } catch {
+    console.warn('⚠️ Supabase 连接失败，请检查网络和配置');
+  }
+})();
+
+// ============================================
 // 类型定义
+// ============================================
 export interface MemberRow {
   id: string;
   name: string;
@@ -26,16 +58,6 @@ export interface RecordRow {
   operator: string;
 }
 
-// Supabase 客户端（单例）
-let supabase: SupabaseClient | null = null;
-
-function getSupabase(): SupabaseClient {
-  if (!supabase) {
-    supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
-  }
-  return supabase;
-}
-
 // ============================================
 // Members 操作
 // ============================================
@@ -44,14 +66,13 @@ function getSupabase(): SupabaseClient {
  * 根据手机号查找会员
  */
 export async function getMemberByPhone(phone: string): Promise<MemberRow | null> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('members')
     .select('*')
     .eq('phone', phone)
     .single();
 
   if (error && error.code !== 'PGRST116') {
-    // PGRST116 = 没有找到行，这是正常的（会员不存在）
     throw error;
   }
 
@@ -62,7 +83,7 @@ export async function getMemberByPhone(phone: string): Promise<MemberRow | null>
  * 获取所有会员
  */
 export async function getMembers(): Promise<MemberRow[]> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('members')
     .select('*')
     .order('created_at', { ascending: false });
@@ -79,7 +100,7 @@ export async function createMember(
   phone: string,
   count: number = 5
 ): Promise<MemberRow> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('members')
     .insert({
       name,
@@ -92,7 +113,6 @@ export async function createMember(
 
   if (error) throw error;
 
-  // 同时写入记录
   await addRecord(data.id, 'recharge', count, 0, 'system');
 
   return data;
@@ -105,8 +125,7 @@ export async function rechargeMember(
   memberId: string,
   addCount: number = 5
 ): Promise<MemberRow> {
-  // 先获取当前值
-  const { data: current, error: fetchError } = await getSupabase()
+  const { data: current, error: fetchError } = await supabase
     .from('members')
     .select('remain_count, total_count')
     .eq('id', memberId)
@@ -117,7 +136,7 @@ export async function rechargeMember(
   const newRemain = current.remain_count + addCount;
   const newTotal = current.total_count + addCount;
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('members')
     .update({
       remain_count: newRemain,
@@ -129,7 +148,6 @@ export async function rechargeMember(
 
   if (error) throw error;
 
-  // 写入记录
   await addRecord(memberId, 'recharge', addCount, 0, 'system');
 
   return data;
@@ -137,8 +155,6 @@ export async function rechargeMember(
 
 /**
  * 创建或充值（智能判断）
- * 如果手机号不存在 → 创建 +5次
- * 如果手机号已存在 → +5次
  */
 export async function createOrRechargeMember(
   name: string,
@@ -160,8 +176,7 @@ export async function createOrRechargeMember(
  * 消费一次（扣减 1 次）
  */
 export async function consumeOnce(memberId: string): Promise<MemberRow> {
-  // 先获取当前值
-  const { data: current, error: fetchError } = await getSupabase()
+  const { data: current, error: fetchError } = await supabase
     .from('members')
     .select('remain_count')
     .eq('id', memberId)
@@ -173,7 +188,7 @@ export async function consumeOnce(memberId: string): Promise<MemberRow> {
     throw new Error('余额不足，无法消费');
   }
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('members')
     .update({
       remain_count: current.remain_count - 1,
@@ -184,7 +199,6 @@ export async function consumeOnce(memberId: string): Promise<MemberRow> {
 
   if (error) throw error;
 
-  // 写入记录
   await addRecord(memberId, 'consume', -1, 0, 'system');
 
   return data;
@@ -198,7 +212,7 @@ export async function adjustCount(
   delta: number,
   operator: string = 'system'
 ): Promise<MemberRow> {
-  const { data: current, error: fetchError } = await getSupabase()
+  const { data: current, error: fetchError } = await supabase
     .from('members')
     .select('remain_count, total_count')
     .eq('id', memberId)
@@ -206,7 +220,6 @@ export async function adjustCount(
 
   if (fetchError) throw fetchError;
 
-  // 如果是扣减，校验余额
   if (delta < 0 && current.remain_count + delta < 0) {
     throw new Error('余额不足，无法扣减');
   }
@@ -214,7 +227,7 @@ export async function adjustCount(
   const newRemain = current.remain_count + delta;
   const newTotal = Math.max(0, current.total_count + delta);
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('members')
     .update({
       remain_count: newRemain,
@@ -226,7 +239,6 @@ export async function adjustCount(
 
   if (error) throw error;
 
-  // 写入记录
   await addRecord(
     memberId,
     delta > 0 ? 'recharge' : 'consume',
@@ -252,7 +264,7 @@ async function addRecord(
   amount: number,
   operator: string
 ): Promise<void> {
-  const { error } = await getSupabase().from('records').insert({
+  const { error } = await supabase.from('records').insert({
     member_id: memberId,
     type,
     count_change: countChange,
@@ -262,7 +274,6 @@ async function addRecord(
 
   if (error) {
     console.error('Failed to add record:', error);
-    // 不抛出错误，避免影响主流程
   }
 }
 
@@ -270,7 +281,7 @@ async function addRecord(
  * 获取会员的所有记录
  */
 export async function getRecords(memberId: string): Promise<RecordRow[]> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await supabase
     .from('records')
     .select('*')
     .eq('member_id', memberId)
