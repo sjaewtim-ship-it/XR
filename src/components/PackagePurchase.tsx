@@ -1,0 +1,123 @@
+import { ArrowLeft, Phone, User, CheckCircle, Info, Wallet } from 'lucide-react';
+import { motion } from 'motion/react';
+
+interface Props {
+  onBack: () => void;
+}
+
+export default function PackagePurchase({ onBack }: Props) {
+  return (
+    <div className="min-h-screen pb-32">
+      <header className="flex items-center h-16 px-4 w-full bg-background/80 backdrop-blur-xl fixed top-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent">
+        <div className="flex items-center w-full justify-between relative">
+          <ArrowLeft onClick={onBack} className="w-6 h-6 text-primary active:scale-95 duration-200 cursor-pointer absolute left-0" />
+          <h1 className="font-headline font-bold text-lg tracking-tight text-primary w-full text-center">XR科普漫游空间</h1>
+        </div>
+      </header>
+
+      <main className="pt-20 px-4 max-w-2xl mx-auto space-y-6">
+        <div className="relative h-48 w-full rounded-xl overflow-hidden mb-8 shadow-2xl">
+          <img 
+            className="w-full h-full object-cover" 
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQNALYHeTyxGgsbCtm1CnKcEkT4sN_ojQg0hthvQc1VmCA1y0qPi8jcP_LLwn9_mWYyM9j22It2WHj7OURtJy_KcLu8373YfqGTOGu43R82HejECPeHgFBl-S0T2h3VidsKpjmOqvU9SVT-_3mqJgBuu4k_gguyeWZ_7p7_acFSKayr6kTLBjZB4sWA18iteLGCF9skyohujwXDYOFiVqzUzraAxBwvmiJ2zPbo6oqLo1sd03-SaMNo0mI9Z8YEeESz4kQiZukGLau" 
+            alt="XR Space"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-6">
+            <h2 className="font-headline text-3xl font-bold text-primary tracking-tight">探索无限可能</h2>
+            <p className="text-on-surface-variant text-sm mt-1">开启您的数字科普策展之旅</p>
+          </div>
+        </div>
+
+        <section className="bg-surface-low/40 backdrop-blur-md p-6 rounded-xl border border-primary/5 space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
+              <span className="w-1 h-5 bg-secondary rounded-full" />
+              会员信息
+            </h3>
+            <button className="bg-[#07C160] hover:opacity-90 text-white text-xs px-4 py-2 rounded-full font-medium flex items-center gap-1 transition-all active:scale-95">
+              <Phone className="w-4 h-4" />
+              一键获取手机号
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs text-on-surface-variant ml-1">姓名</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
+                <input 
+                  className="w-full bg-surface-low border-none rounded-xl h-12 pl-12 pr-4 text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary transition-all outline-none" 
+                  placeholder="请输入姓名" 
+                  type="text" 
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-on-surface-variant ml-1">手机号</label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
+                <input 
+                  className="w-full bg-surface-low border-none rounded-xl h-12 pl-12 pr-4 text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary transition-all outline-none" 
+                  placeholder="请输入手机号" 
+                  type="tel" 
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-surface-low/40 backdrop-blur-md p-6 rounded-xl border border-primary/5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-1 h-5 bg-secondary rounded-full" />
+            <h3 className="text-lg font-bold text-on-surface">XR科普漫游空间-5次卡套餐</h3>
+          </div>
+          <div className="bg-surface-lowest/50 rounded-xl p-5 space-y-4">
+            <p className="text-sm text-primary font-medium">包含体验项目：</p>
+            <ul className="grid grid-cols-1 gap-3">
+              {['埃菲尔铁塔云游记', '恐龙时代大冒险', '火星基地生存指南', '深海两万里沉浸探秘'].map((item) => (
+                <li key={item} className="flex items-center gap-3 text-on-surface-variant text-sm">
+                  <CheckCircle className="w-5 h-5 text-secondary fill-secondary/10" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="pt-4 mt-2 border-t border-outline-variant/30 flex items-start gap-2">
+              <Info className="w-4 h-4 text-outline mt-0.5" />
+              <p className="text-[12px] text-outline leading-relaxed">说明：主题任选，每次扣减1次。本套餐一经售出，支持线上预约使用。</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex items-end justify-between px-2 pt-4">
+          <div className="space-y-1">
+            <p className="text-xs text-on-surface-variant uppercase tracking-widest">Membership Fee</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-secondary font-headline text-2xl font-bold">¥</span>
+              <span className="text-secondary font-headline text-5xl font-extrabold tracking-tighter">198</span>
+            </div>
+          </div>
+          <div className="text-right pb-1">
+            <div className="inline-flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_#a9c7ff]" />
+              <span className="text-primary text-[12px] font-bold">有效期：长期有效</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="fixed bottom-0 w-full bg-background/90 backdrop-blur-lg z-50 border-t border-primary/10 h-24 flex items-center px-6 pb-safe shadow-[0_-10px_40px_rgba(11,30,61,0.5)]">
+        <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-6">
+          <div className="hidden sm:block">
+            <p className="text-outline text-xs">实付金额</p>
+            <p className="text-secondary font-headline font-bold text-xl">¥198.00</p>
+          </div>
+          <button className="flex-1 bg-gradient-to-r from-accent to-secondary text-on-background font-bold py-4 rounded-xl shadow-[0_4px_20px_rgba(253,139,0,0.3)] active:scale-95 transition-all duration-200 text-lg flex items-center justify-center gap-2">
+            立即支付
+            <Wallet className="w-5 h-5" />
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}
