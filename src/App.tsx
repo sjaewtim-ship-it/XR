@@ -13,8 +13,9 @@ import MemberDetails from './components/MemberDetails';
 import PackagePurchase from './components/PackagePurchase';
 import MemberHome from './components/MemberHome';
 
-// 工具函数：将后端 MemberRow 转为前端 Member
-function rowToMember(row: MemberRow): Member {
+// 工具函数：将后端 MemberRow 转为前端 Member（处理 null）
+function rowToMember(row: MemberRow | null): Member | null {
+  if (!row) return null;
   return {
     id: row.id,
     name: row.name,
@@ -41,37 +42,25 @@ export default function App() {
   }, []);
 
   // 拉取所有会员
-  const fetchMembers = useCallback(async () => {
-    try {
-      setGlobalLoading(true);
-      const rows = await getMembers();
-      return rows.map(rowToMember);
-    } catch {
-      showToast('拉取会员列表失败', 'error');
-      return [];
-    } finally {
-      setGlobalLoading(false);
-    }
-  }, [showToast]);
+  const fetchMembers = useCallback(async (): Promise<Member[]> => {
+    setGlobalLoading(true);
+    const rows = await getMembers();
+    setGlobalLoading(false);
+    return rows.map(rowToMember);
+  }, []);
 
   // 根据手机号查找会员
   const handleFindMemberByPhone = useCallback(async (phone: string): Promise<Member | null> => {
-    try {
-      setGlobalLoading(true);
-      const row = await getMemberByPhone(phone);
-      if (row) {
-        const member = rowToMember(row);
-        setSelectedMember(member);
-        return member;
-      }
-      return null;
-    } catch {
-      showToast('查询失败', 'error');
-      return null;
-    } finally {
-      setGlobalLoading(false);
+    setGlobalLoading(true);
+    const row = await getMemberByPhone(phone);
+    setGlobalLoading(false);
+    if (row) {
+      const member = rowToMember(row);
+      setSelectedMember(member);
+      return member;
     }
-  }, [showToast]);
+    return null;
+  }, []);
 
   // 选择会员（进入详情）
   const handleSelectMember = useCallback((member: Member) => {
@@ -79,88 +68,79 @@ export default function App() {
     setCurrentView('details');
   }, []);
 
-  // 新建/充值会员
+  // 新建/充值会员（✅ 支付入口：不接支付，直接创建/充值）
   const handleCreateOrRecharge = useCallback(async (name: string, phone: string, count?: number) => {
-    try {
-      setGlobalLoading(true);
-      const result = await createOrRechargeMember(name, phone, count);
-      const member = rowToMember(result.member);
-      setSelectedMember(member);
-      showToast(result.isNew ? `创建成功！赠送 ${count || 5} 次` : `充值成功！+${count || 5} 次`, 'success');
-      return member;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '操作失败';
-      showToast(msg, 'error');
-      throw err;
-    } finally {
-      setGlobalLoading(false);
+    setGlobalLoading(true);
+    const result = await createOrRechargeMember(name, phone, count);
+    setGlobalLoading(false);
+
+    if (!result.member) {
+      showToast('操作失败，请重试', 'error');
+      return null;
     }
+
+    const member = rowToMember(result.member);
+    setSelectedMember(member);
+    showToast(result.isNew ? `创建成功！赠送 ${count || 5} 次` : `充值成功！+${count || 5} 次`, 'success');
+    return member;
   }, [showToast]);
 
   // 消费 1 次
   const handleConsumeOnce = useCallback(async (memberId: string): Promise<Member | null> => {
-    try {
-      setGlobalLoading(true);
-      const updated = await consumeOnce(memberId);
-      const member = rowToMember(updated);
-      setSelectedMember(member);
-      showToast('消费成功！-1 次', 'success');
-      return member;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '消费失败';
-      showToast(msg, 'error');
-      throw err;
-    } finally {
-      setGlobalLoading(false);
+    setGlobalLoading(true);
+    const updated = await consumeOnce(memberId);
+    setGlobalLoading(false);
+
+    if (!updated) {
+      showToast('消费失败，可能余额不足', 'error');
+      return null;
     }
+
+    const member = rowToMember(updated);
+    setSelectedMember(member);
+    showToast('消费成功！-1 次', 'success');
+    return member;
   }, [showToast]);
 
   // 增加次数
   const handleAddCount = useCallback(async (memberId: string, addCount: number): Promise<Member | null> => {
-    try {
-      setGlobalLoading(true);
-      const updated = await rechargeMember(memberId, addCount);
-      const member = rowToMember(updated);
-      setSelectedMember(member);
-      showToast(`增加成功！+${addCount} 次`, 'success');
-      return member;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '增加失败';
-      showToast(msg, 'error');
-      throw err;
-    } finally {
-      setGlobalLoading(false);
+    setGlobalLoading(true);
+    const updated = await rechargeMember(memberId, addCount);
+    setGlobalLoading(false);
+
+    if (!updated) {
+      showToast('增加失败', 'error');
+      return null;
     }
+
+    const member = rowToMember(updated);
+    setSelectedMember(member);
+    showToast(`增加成功！+${addCount} 次`, 'success');
+    return member;
   }, [showToast]);
 
   // 扣减次数
   const handleSubtractCount = useCallback(async (memberId: string, subCount: number): Promise<Member | null> => {
-    try {
-      setGlobalLoading(true);
-      const updated = await adjustCount(memberId, -subCount, 'merchant');
-      const member = rowToMember(updated);
-      setSelectedMember(member);
-      showToast(`扣减成功！-${subCount} 次`, 'success');
-      return member;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '扣减失败';
-      showToast(msg, 'error');
-      throw err;
-    } finally {
-      setGlobalLoading(false);
+    setGlobalLoading(true);
+    const updated = await adjustCount(memberId, -subCount, 'merchant');
+    setGlobalLoading(false);
+
+    if (!updated) {
+      showToast('扣减失败，可能余额不足', 'error');
+      return null;
     }
+
+    const member = rowToMember(updated);
+    setSelectedMember(member);
+    showToast(`扣减成功！-${subCount} 次`, 'success');
+    return member;
   }, [showToast]);
 
   // 获取会员记录
   const handleGetRecords = useCallback(async (memberId: string) => {
-    try {
-      const rows: RecordRow[] = await getRecords(memberId);
-      return rows.map(dbRecordToDisplay);
-    } catch {
-      showToast('拉取记录失败', 'error');
-      return [];
-    }
-  }, [showToast]);
+    const rows = await getRecords(memberId);
+    return rows.map(dbRecordToDisplay);
+  }, []);
 
   const handleBack = () => {
     setCurrentView('management');
