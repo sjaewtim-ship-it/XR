@@ -1,88 +1,12 @@
-import { Member, Record } from './types';
+/**
+ * 常量文件
+ * Mock 数据已移除，所有数据改为 API 调用
+ * 此文件保留以避免 import 断裂
+ */
 
-export const MOCK_MEMBERS: Member[] = [
-  {
-    id: 'XR-7729-X01',
-    name: '林木深',
-    phone: '138 **** 9928',
-    level: 'Premium',
-    remainingTimes: 24,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCehtZEgab8vE0r2CJ3phfIkHKbBqbj8Ck8UDb0m6Yz0oGaCiRr8PZ-aSHdk87jxSK6TQonJeNiBpy9eWBvhgQPkoEjgYD_Q8N6kaKF3jUzkHczGKxmJGt2y9fujCDlf2yISWLKKrAH-4TGBcJI2hVCndX24NATZKkne-psH9aTtbK0Di8qIISMB4Em_Y9Bbejtw_aY3Roi1dK5j_Ap2CNDWap0PTb9o1VNlQwXTMH7JJtA08GxTdHE01wIU0vbkNvtyO3Uwctzjjp8',
-    lastVisit: '2023-11-20',
-  },
-  {
-    id: 'XR-8821-M02',
-    name: '李美琳',
-    phone: '159 **** 2284',
-    level: 'Normal',
-    remainingTimes: 12,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBiSivbgVXSoNLud02MUQ-0c6YNt1JGiRgN1CKSPfnvzFjW2G0rhHI8soEadXgzJbWgxXe2Tg2W2CMgAQ0HjZcOANCr0fR018guv7Jiw7gyN0oBEdEdyoNPMyE18jEyQQC3jDpXBC5eud8LXqOtWfPhKuzxJmIRmAd0VJ-ovP-az9-e5Nj9P-gyaE1jM8dG2o9CoNcfZRsxS9xdkj3mzaP9Zp6huKjxe-GaOAOWQIk90TF_qx8ux96VfGCtdLkDjUgrlv6hK06aWoP0',
-    lastVisit: '2023-11-21',
-  },
-  {
-    id: 'XR-5566-W03',
-    name: '王强',
-    phone: '133 **** 5566',
-    level: 'Experience',
-    remainingTimes: 3,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCqIxUc8n-Sg5wokdUBvxYJJZM-QOLcRLXSW7ORxfW79ChQqpNqCzfLXtkrkvRu3ud_a9_hzWW6ms0vTjVHTaTaPVSCni1pJUT5ip4DJds_J8syLa-R38AmVm4KKyQOFOM9rSGBGy2dcRw0lNnTf42yEt0jYgMWf0YM-51vMGzbpooqSxuvBmTt7GeDPqz5qF1NLRjvHxfJkCIBY11kQEuaqv40S4wkigZPbegKg8LHMOqBExFaNLfR3Shc1bUfs8D6LyBvauM9ZUQv',
-    lastVisit: '2023-11-18',
-  },
-  {
-    id: 'XR-4432-C04',
-    name: '陈小雨',
-    phone: '186 **** 4432',
-    level: 'Normal',
-    remainingTimes: 45,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTJTciJpxkBw1Ig9vI2FgeBPfQxxGY-dBoDyQRT8bZ7BYr4eYKZUrxYn0uSGkstZOrR9qk6PHsInVZDv5H3a_bVkeYXvuAQ0w3VtnsiJcDT2ZOFH9cZz5N_2RT3lxMG9FbiakmGlL_hSoyGSHtDCUqHqGNJpCmDeqCEDoDg-lnzju6_mfuhzAuAOYGINi_LRlYWHZXLNrRk5dsyVlFf3d99QdjCuFvMYTsRAE9qMPIbp8TNtJrqf0cPbZmjX1zogh00GdijnUCmrFe',
-    lastVisit: '2023-11-15',
-  },
-  {
-    id: 'XR-1198-Z05',
-    name: '朱建国',
-    phone: '130 **** 1198',
-    level: 'Normal',
-    remainingTimes: 0,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDms9RnpwvdbBGCiiRzX_28o-WYJCsOHbhg0zdn1KZzEdlx42VoteSTZFXOfSoi5K5uAlBXB1WGbSgfi5wmIf9gzyhBxQVfWbIDd5P_qXNzn0UHZAwol94iP5kdVFPa3iDK2eQ6WSjUpAUaC091V_Pcf0ErWbr4rlAuknfKTz3DYimQXw7DKenTMQFvUUNvKEX-2mr-v-4VDeOXSfN6hjxK8lLFUK51JXQCYdOzMJKCmuROp79xA81tLhJIRZiXALnGpgWJyZoQU5Cw',
-    lastVisit: '2023-11-10',
-  },
-];
+// 套餐价格配置
+export const PACKAGE_PRICE = 198;
+export const PACKAGE_DEFAULT_COUNT = 5;
 
-export const MOCK_RECORDS: Record[] = [
-  {
-    id: '1',
-    type: 'recharge',
-    title: '手动充值',
-    date: '2023-11-24 14:20:05',
-    amount: 10,
-    unit: '次',
-    price: 2400,
-  },
-  {
-    id: '2',
-    type: 'consumption',
-    title: '核销消费',
-    date: '2023-11-20 18:05:42',
-    amount: -1,
-    unit: '次',
-    description: '商家端核销',
-  },
-  {
-    id: '3',
-    type: 'consumption',
-    title: '核销消费',
-    date: '2023-11-15 10:12:15',
-    amount: -1,
-    unit: '次',
-    description: '商家端核销',
-  },
-  {
-    id: '4',
-    type: 'gift',
-    title: '开卡礼包',
-    date: '2023-11-01 09:00:00',
-    amount: 16,
-    unit: '次',
-    price: 0,
-  },
-];
+// 头像占位（已改为显示姓名首字）
+export const DEFAULT_AVATARS: string[] = [];

@@ -1,14 +1,27 @@
+import { useState, useEffect } from 'react';
 import { ShoppingCart, ChevronRight, PlusCircle, Rocket, Verified, Monitor, Star } from 'lucide-react';
-import { Member } from '../types';
-import { MOCK_RECORDS } from '../constants';
+import { Member, DisplayRecord, maskPhone } from '../types';
 import { motion } from 'motion/react';
 
 interface Props {
   member: Member;
   onBuyPackage: () => void;
+  onGetRecords: (memberId: string) => Promise<DisplayRecord[]>;
+  onRefreshMember: () => Promise<void>;
 }
 
-export default function MemberHome({ member, onBuyPackage }: Props) {
+export default function MemberHome({ member, onBuyPackage, onGetRecords, onRefreshMember }: Props) {
+  const [records, setRecords] = useState<DisplayRecord[]>([]);
+
+  useEffect(() => {
+    onGetRecords(member.id).then(setRecords);
+  }, [member.id, onGetRecords]);
+
+  // 购买后刷新
+  const handleBuyAndRefresh = async () => {
+    onBuyPackage();
+  };
+
   return (
     <div className="min-h-screen">
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex items-center h-16 px-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent justify-center">
@@ -29,7 +42,7 @@ export default function MemberHome({ member, onBuyPackage }: Props) {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                     </span>
                   </div>
-                  <p className="text-on-surface-variant font-medium tracking-wider">{member.phone}</p>
+                  <p className="text-on-surface-variant font-medium tracking-wider">{maskPhone(member.phone)}</p>
                 </div>
                 <div className="bg-surface-highest/40 backdrop-blur-md px-3 py-1 rounded-full border border-outline-variant/30">
                   <span className="text-xs font-bold text-primary tracking-widest uppercase">{member.level}</span>
@@ -51,8 +64,8 @@ export default function MemberHome({ member, onBuyPackage }: Props) {
         </section>
 
         <section className="mt-8 px-2">
-          <button 
-            onClick={onBuyPackage}
+          <button
+            onClick={handleBuyAndRefresh}
             className="w-full bg-secondary text-on-background font-bold py-5 rounded-xl shadow-[0_8px_20px_-4px_rgba(253,139,0,0.4)] active:scale-95 transition-all duration-200 text-lg flex items-center justify-center gap-2"
           >
             <ShoppingCart className="w-6 h-6 fill-on-background" />
@@ -72,35 +85,41 @@ export default function MemberHome({ member, onBuyPackage }: Props) {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="space-y-4">
-            {MOCK_RECORDS.slice(0, 3).map((record) => (
-              <div key={record.id} className="bg-surface-low rounded-xl p-5 border border-transparent hover:border-primary/30 transition-all">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      record.type === 'recharge' ? 'bg-secondary/20' : 'bg-primary/20'
-                    }`}>
-                      {record.type === 'recharge' ? (
-                        <PlusCircle className="w-6 h-6 text-secondary fill-secondary/10" />
-                      ) : (
-                        <Rocket className="w-6 h-6 text-primary fill-primary/10" />
-                      )}
+          {records.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-outline text-sm">暂无使用记录</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {records.slice(0, 3).map((record) => (
+                <div key={record.id} className="bg-surface-low rounded-xl p-5 border border-transparent hover:border-primary/30 transition-all">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        record.type === 'recharge' ? 'bg-secondary/20' : 'bg-primary/20'
+                      }`}>
+                        {record.type === 'recharge' ? (
+                          <PlusCircle className="w-6 h-6 text-secondary fill-secondary/10" />
+                        ) : (
+                          <Rocket className="w-6 h-6 text-primary fill-primary/10" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-on-surface">{record.title}</h4>
+                        <p className="text-xs text-on-surface-variant mt-1">{record.date}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-on-surface">{record.title} - {record.type === 'recharge' ? '星际套餐' : 'XR漫游'}</h4>
-                      <p className="text-xs text-on-surface-variant mt-1">{record.date}</p>
+                    <div className="text-right">
+                      <p className={`text-xl font-headline font-bold ${record.amount > 0 ? 'text-secondary' : 'text-primary'}`}>
+                        {record.amount > 0 ? `+${record.amount}` : record.amount}
+                      </p>
+                      <p className="text-xs text-on-surface-variant/40">{record.amount > 0 ? `¥${record.price ?? 0}` : '已完成'}</p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-xl font-headline font-bold ${record.amount > 0 ? 'text-secondary' : 'text-primary'}`}>
-                      {record.amount > 0 ? `+${record.amount}` : record.amount}
-                    </p>
-                    <p className="text-xs text-on-surface-variant/40">{record.amount > 0 ? `¥${record.price}` : '已完成'}</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mt-8 mb-20 px-2">
