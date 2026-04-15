@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, ChevronRight, UserPlus } from 'lucide-react';
+import { Search, ChevronRight, UserPlus } from 'lucide-react';
 import { Member, maskPhone } from '../types';
+import { supabase } from '../services/supabase';
 import { motion } from 'motion/react';
 
 interface Props {
@@ -8,12 +9,51 @@ interface Props {
   onAddMember: () => void;
   fetchMembers: () => Promise<Member[]>;
   findMemberByPhone: (phone: string) => Promise<Member | null>;
+  refreshTodayCount?: () => void;
 }
 
-export default function MemberManagement({ onSelectMember, onAddMember, fetchMembers, findMemberByPhone }: Props) {
+export default function MemberManagement({ onSelectMember, onAddMember, fetchMembers, findMemberByPhone, refreshTodayCount }: Props) {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [todayCount, setTodayCount] = useState(0);
+
+  // 今日消费次数统计（基于 records 表）
+  const getTodayConsumeCount = async () => {
+    const now = new Date();
+
+    // 本地时间"今日开始"
+    const start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+    // 本地时间"明日开始"
+    const end = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1
+    );
+
+    const { count, error } = await supabase
+      .from('records')
+      .select('*', { count: 'exact', head: true })
+      .eq('type', 'consume')
+      .gte('created_at', start.toISOString())
+      .lt('created_at', end.toISOString());
+
+    if (error) {
+      console.error('今日消费统计失败:', error);
+      return 0;
+    }
+
+    return count || 0;
+  };
+
+  useEffect(() => {
+    getTodayConsumeCount().then(setTodayCount);
+  }, []);
 
   // 初始拉取
   useEffect(() => {
@@ -33,14 +73,12 @@ export default function MemberManagement({ onSelectMember, onAddMember, fetchMem
       fetchMembers().then(setMembers);
       return;
     }
-    // 尝试按手机号精确查找
     setIsSearching(true);
     try {
       const found = await findMemberByPhone(searchQuery.trim());
       if (found) {
         setMembers([found]);
       } else {
-        // 精确查找无结果，回退到前端过滤
         fetchMembers().then((all) => {
           setMembers(all);
         });
@@ -52,16 +90,11 @@ export default function MemberManagement({ onSelectMember, onAddMember, fetchMem
 
   // 统计
   const totalCount = members.length;
-  const todayConsume = 0; // 可从 records 表统计，暂留 0
 
   return (
     <div className="min-h-screen pb-24">
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex items-center h-16 px-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent justify-center">
-        <h1 className="font-headline font-bold text-lg tracking-tight text-primary">会员管理</h1>
-        <div className="absolute right-4 flex items-center gap-4">
-          <Filter className="w-5 h-5 text-primary/70 cursor-pointer" />
-          <MoreVertical className="w-5 h-5 text-primary/70 cursor-pointer" />
-        </div>
+        <h1 className="font-headline font-bold text-lg tracking-tight text-primary">XR科普漫游空间-会员管理平台</h1>
       </header>
 
       <main className="pt-20 px-4 max-w-2xl mx-auto">
@@ -99,7 +132,7 @@ export default function MemberManagement({ onSelectMember, onAddMember, fetchMem
             <div className="absolute -right-4 -top-4 w-20 h-20 bg-secondary/5 rounded-full group-hover:scale-150 transition-transform duration-500" />
             <p className="text-on-surface-variant text-xs mb-2 font-medium">今日消费次数</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-headline font-bold text-secondary">{todayConsume}</span>
+              <span className="text-3xl font-headline font-bold text-secondary">{todayCount}</span>
               <span className="text-xs text-secondary/60 font-medium">次</span>
             </div>
           </div>

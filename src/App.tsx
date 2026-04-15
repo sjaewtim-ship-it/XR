@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { Member, View } from './types';
 import { getMemberLevel, maskPhone, dbRecordToDisplay } from './types';
 import { getMemberByPhone, getMembers, createOrRechargeMember, consumeOnce, adjustCount, rechargeMember, getRecords } from './services/api';
+import { supabase } from './services/supabase';
 import type { MemberRow, RecordRow } from './services/api';
 import MemberManagement from './components/MemberManagement';
 import MemberDetails from './components/MemberDetails';
@@ -142,6 +143,17 @@ export default function App() {
     return rows.map(dbRecordToDisplay);
   }, []);
 
+  // 刷新今日消费次数
+  const handleRefreshTodayCount = useCallback(async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const { count } = await supabase
+      .from('records')
+      .select('*', { count: 'exact', head: true })
+      .eq('type', 'consume')
+      .gte('created_at', `${today}T00:00:00`);
+    return count || 0;
+  }, []);
+
   const handleBack = () => {
     setCurrentView('management');
     setSelectedMember(null);
@@ -176,6 +188,7 @@ export default function App() {
           onAddMember={() => setCurrentView('purchase')}
           fetchMembers={fetchMembers}
           findMemberByPhone={handleFindMemberByPhone}
+          refreshTodayCount={handleRefreshTodayCount}
         />
       )}
       {currentView === 'details' && selectedMember && (
@@ -187,6 +200,7 @@ export default function App() {
           onSubtractCount={handleSubtractCount}
           onGetRecords={handleGetRecords}
           onRecharge={handleCreateOrRecharge}
+          onActionSuccess={handleRefreshTodayCount}
         />
       )}
       {currentView === 'purchase' && (

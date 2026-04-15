@@ -77,7 +77,7 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
       <header className="flex items-center h-16 px-4 w-full bg-background/80 backdrop-blur-xl fixed top-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent">
         <div className="flex items-center w-full justify-between relative">
           <ArrowLeft onClick={onBack} className="w-6 h-6 text-primary active:scale-95 duration-200 cursor-pointer absolute left-0" />
-          <h1 className="font-headline font-bold text-lg tracking-tight text-primary w-full text-center">XR科普漫游空间</h1>
+          <h1 className="font-headline font-bold text-lg tracking-tight text-primary w-full text-center">购买套餐</h1>
         </div>
       </header>
 

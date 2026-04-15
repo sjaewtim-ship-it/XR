@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MoreVertical, Star, Bolt, PlusCircle, MinusCircle, Wallet, Rocket, Award } from 'lucide-react';
+import { ArrowLeft, Star, Bolt, PlusCircle, MinusCircle, Wallet, Rocket, Award } from 'lucide-react';
 import { Member, DisplayRecord, maskPhone } from '../types';
 import { motion } from 'motion/react';
 
@@ -11,6 +11,7 @@ interface Props {
   onSubtractCount: (memberId: string, count: number) => Promise<Member | null>;
   onGetRecords: (memberId: string) => Promise<DisplayRecord[]>;
   onRecharge: (name: string, phone: string, count?: number) => Promise<Member>;
+  onActionSuccess?: () => void;
 }
 
 export default function MemberDetails({
@@ -21,6 +22,7 @@ export default function MemberDetails({
   onSubtractCount,
   onGetRecords,
   onRecharge,
+  onActionSuccess,
 }: Props) {
   const [records, setRecords] = useState<DisplayRecord[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,7 +43,10 @@ export default function MemberDetails({
   // 消费 1 次
   const handleConsume = async () => {
     const updated = await onConsumeOnce(member.id);
-    if (updated) refreshRecords();
+    if (updated) {
+      refreshRecords();
+      onActionSuccess?.();
+    }
   };
 
   // 增加次数
@@ -51,6 +56,7 @@ export default function MemberDetails({
       setShowAddModal(false);
       setCustomCount(5);
       refreshRecords();
+      onActionSuccess?.();
     }
   };
 
@@ -62,6 +68,7 @@ export default function MemberDetails({
       setShowSubtractModal(false);
       setSubtractCount(1);
       refreshRecords();
+      onActionSuccess?.();
     }
   };
 
@@ -77,8 +84,7 @@ export default function MemberDetails({
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex items-center h-16 px-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent">
         <div className="flex items-center w-full max-w-4xl mx-auto relative">
           <ArrowLeft onClick={onBack} className="w-6 h-6 text-primary active:scale-95 duration-200 cursor-pointer" />
-          <h1 className="font-headline font-bold text-lg tracking-tight text-primary absolute left-1/2 -translate-x-1/2">会员详情 (商家端)</h1>
-          <MoreVertical className="ml-auto w-5 h-5 text-primary/70 hover:opacity-80 transition-opacity cursor-pointer" />
+          <h1 className="font-headline font-bold text-lg tracking-tight text-primary absolute left-1/2 -translate-x-1/2">会员详情</h1>
         </div>
       </header>
 
