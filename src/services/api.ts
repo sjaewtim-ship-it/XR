@@ -42,8 +42,8 @@ export async function rechargeMember(
   return supabaseService.rechargeMember(memberId, addCount);
 }
 
-export async function consumeOnce(memberId: string): Promise<MemberRow | null> {
-  return supabaseService.consumeOnce(memberId);
+export async function consumeOnce(memberId: string, operator?: string): Promise<MemberRow | null> {
+  return supabaseService.consumeOnce(memberId, operator);
 }
 
 export async function adjustCount(
