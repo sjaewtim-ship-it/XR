@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 import { Member, View } from './types';
 import { getMemberLevel, maskPhone, dbRecordToDisplay } from './types';
 import { getMemberByPhone, getMembers, createOrRechargeMember, consumeOnce, adjustCount, rechargeMember, getRecords } from './services/api';
 import { supabase } from './services/supabase';
 import type { MemberRow, RecordRow } from './services/api';
+import { getCurrentUser, signOut, onAuthStateChange, User } from './services/auth';
 import MemberManagement from './components/MemberManagement';
 import MemberDetails from './components/MemberDetails';
 import PackagePurchase from './components/PackagePurchase';
 import MemberHome from './components/MemberHome';
+import Login from './components/Login';
 
 // 工具函数：将后端 MemberRow 转为前端 Member（处理 null）
 function rowToMember(row: MemberRow | null): Member | null {
@@ -32,15 +35,57 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('purchase');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   
+  // 认证状态
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  
   // 全局 loading / toast 状态
   const [globalLoading, setGlobalLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // 初始化：检查登录状态 + 监听 auth 变化
+  useEffect(() => {
+    // 初始检查
+    getCurrentUser().then(({ user }) => {
+      setCurrentUser(user);
+      setAuthLoading(false);
+    });
+
+    // 监听 auth 状态变化（登录/登出）
+    const unsubscribe = onAuthStateChange((user) => {
+      setCurrentUser(user);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Toast 自动消失
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  // 处理登录成功
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    setCurrentView('management'); // 登录后跳转到管理页
+    showToast('登录成功', 'success');
+  };
+
+  // 处理登出
+  const handleLogout = async () => {
+    await signOut();
+    setCurrentUser(null);
+    setCurrentView('purchase'); // 回到首页
+    showToast('已退出登录', 'success');
+  };
+
+  // 获取当前用户邮箱（用于 operator）
+  const getCurrentOperator = (): string => {
+    return currentUser?.email || 'unknown';
+  };
 
   // 拉取所有会员
   const fetchMembers = useCallback(async (): Promise<Member[]> => {
@@ -89,7 +134,7 @@ export default function App() {
   // 消费 1 次
   const handleConsumeOnce = useCallback(async (memberId: string): Promise<Member | null> => {
     setGlobalLoading(true);
-    const updated = await consumeOnce(memberId);
+    const updated = await consumeOnce(memberId, getCurrentOperator());
     setGlobalLoading(false);
 
     if (!updated) {
@@ -123,7 +168,7 @@ export default function App() {
   // 扣减次数
   const handleSubtractCount = useCallback(async (memberId: string, subCount: number): Promise<Member | null> => {
     setGlobalLoading(true);
-    const updated = await adjustCount(memberId, -subCount, 'merchant');
+    const updated = await adjustCount(memberId, -subCount, getCurrentOperator());
     setGlobalLoading(false);
 
     if (!updated) {
@@ -159,8 +204,40 @@ export default function App() {
     setSelectedMember(null);
   };
 
+  // Auth loading 状态
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-on-surface-variant text-sm">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 未登录：显示登录页
+  if (!currentUser) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // 已登录：显示主应用
   return (
     <div className="min-h-screen bg-background text-on-background">
+      {/* 顶部用户信息 + 登出按钮 */}
+      <div className="fixed top-4 right-4 z-[100] flex items-center gap-2 bg-surface-low/80 backdrop-blur-md px-3 py-2 rounded-xl border border-outline-variant/20">
+        <span className="text-xs text-on-surface-variant truncate max-w-[150px]">
+          {currentUser.email}
+        </span>
+        <button
+          onClick={handleLogout}
+          className="p-1.5 hover:bg-secondary/20 rounded-lg transition-colors"
+          title="退出登录"
+        >
+          <LogOut className="w-4 h-4 text-on-surface-variant" />
+        </button>
+      </div>
+
       {/* Toast */}
       {toast && (
         <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-xl shadow-2xl text-sm font-bold transition-all ${

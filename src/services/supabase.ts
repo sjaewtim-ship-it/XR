@@ -23,25 +23,6 @@ if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('YOUR_PROJECT') || supa
 export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 // ============================================
-// 连接验证（仅开发环境）
-// ============================================
-(async function verifyConnection() {
-  if (import.meta.env.VITE_APP_ENV === 'prod') return;
-  if (!supabaseUrl || !supabaseKey) return;
-  try {
-    const { error } = await supabase.from('members').select('count', { count: 'exact', head: true });
-    if (error) {
-      console.warn('⚠️ Supabase 连接警告:', error.message);
-      console.warn('请确认已在 Supabase 项目中建好 members 表');
-    } else {
-      console.log('✅ Supabase 连接成功 | URL:', supabaseUrl);
-    }
-  } catch {
-    console.warn('⚠️ Supabase 连接失败，请检查网络和配置');
-  }
-})();
-
-// ============================================
 // 类型定义
 // ============================================
 export interface MemberRow {
@@ -128,7 +109,7 @@ export async function createMember(
 
   // 同时写入记录（不阻塞主流程）
   if (data) {
-    addRecord(data.id, 'recharge', count, 0, 'system');
+    addRecord(data.id, 'recharge', count, 0, 'system'); // 创建时 operator 保持 system
   }
 
   return data;
@@ -176,7 +157,7 @@ export async function rechargeMember(
     return null;
   }
 
-  // 写入记录（不阻塞主流程）
+  // 写入记录（不阻塞主流程）- operator 由上层传入，这里保持 system 作为默认
   addRecord(memberId, 'recharge', addCount, 0, 'system');
 
   return data;
@@ -209,7 +190,7 @@ export async function createOrRechargeMember(
  * 消费一次（扣减 1 次）
  * ✅ 已修复：使用 maybeSingle()
  */
-export async function consumeOnce(memberId: string): Promise<MemberRow | null> {
+export async function consumeOnce(memberId: string, operator: string = 'system'): Promise<MemberRow | null> {
   const { data: current, error: fetchError } = await supabase
     .from('members')
     .select('remain_count')
@@ -245,7 +226,7 @@ export async function consumeOnce(memberId: string): Promise<MemberRow | null> {
     return null;
   }
 
-  addRecord(memberId, 'consume', -1, 0, 'system');
+  addRecord(memberId, 'consume', -1, 0, operator);
 
   return data;
 }
