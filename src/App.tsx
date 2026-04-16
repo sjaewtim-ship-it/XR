@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { LogOut } from 'lucide-react';
 import { Member, View } from './types';
 import { getMemberLevel, maskPhone, dbRecordToDisplay } from './types';
 import { getMemberByPhone, getMembers, createOrRechargeMember, consumeOnce, adjustCount, rechargeMember, getRecords } from './services/api';
@@ -117,7 +116,7 @@ export default function App() {
   // 新建/充值会员（✅ 支付入口：不接支付，直接创建/充值）
   const handleCreateOrRecharge = useCallback(async (name: string, phone: string, count?: number) => {
     setGlobalLoading(true);
-    const result = await createOrRechargeMember(name, phone, count);
+    const result = await createOrRechargeMember(name, phone, count, getCurrentOperator());
     setGlobalLoading(false);
 
     if (!result.member) {
@@ -126,10 +125,15 @@ export default function App() {
     }
 
     const member = rowToMember(result.member);
-    setSelectedMember(member);
-    showToast(result.isNew ? `创建成功！赠送 ${count || 5} 次` : `充值成功！+${count || 5} 次`, 'success');
+
+    // 关键修复：延迟状态更新，避免页面切换/卸载过程中触发 removeChild 错误
+    setTimeout(() => {
+      setSelectedMember(member);
+      showToast(result.isNew ? `创建成功！赠送 ${count || 5} 次` : `充值成功！+${count || 5} 次`, 'success');
+    }, 0);
+
     return member;
-  }, [showToast]);
+  }, [showToast, currentUser]);
 
   // 消费 1 次
   const handleConsumeOnce = useCallback(async (memberId: string): Promise<Member | null> => {
@@ -143,15 +147,20 @@ export default function App() {
     }
 
     const member = rowToMember(updated);
-    setSelectedMember(member);
-    showToast('消费成功！-1 次', 'success');
+
+    // 关键修复：延迟状态更新
+    setTimeout(() => {
+      setSelectedMember(member);
+      showToast('消费成功！-1 次', 'success');
+    }, 0);
+
     return member;
-  }, [showToast]);
+  }, [showToast, currentUser]);
 
   // 增加次数
   const handleAddCount = useCallback(async (memberId: string, addCount: number): Promise<Member | null> => {
     setGlobalLoading(true);
-    const updated = await rechargeMember(memberId, addCount);
+    const updated = await rechargeMember(memberId, addCount, getCurrentOperator());
     setGlobalLoading(false);
 
     if (!updated) {
@@ -160,10 +169,15 @@ export default function App() {
     }
 
     const member = rowToMember(updated);
-    setSelectedMember(member);
-    showToast(`增加成功！+${addCount} 次`, 'success');
+
+    // 关键修复：延迟状态更新
+    setTimeout(() => {
+      setSelectedMember(member);
+      showToast(`增加成功！+${addCount} 次`, 'success');
+    }, 0);
+
     return member;
-  }, [showToast]);
+  }, [showToast, currentUser]);
 
   // 扣减次数
   const handleSubtractCount = useCallback(async (memberId: string, subCount: number): Promise<Member | null> => {
@@ -177,10 +191,15 @@ export default function App() {
     }
 
     const member = rowToMember(updated);
-    setSelectedMember(member);
-    showToast(`扣减成功！-${subCount} 次`, 'success');
+
+    // 关键修复：延迟状态更新
+    setTimeout(() => {
+      setSelectedMember(member);
+      showToast(`扣减成功！-${subCount} 次`, 'success');
+    }, 0);
+
     return member;
-  }, [showToast]);
+  }, [showToast, currentUser]);
 
   // 获取会员记录
   const handleGetRecords = useCallback(async (memberId: string) => {
@@ -224,23 +243,9 @@ export default function App() {
   // 已登录：显示主应用
   return (
     <div className="min-h-screen bg-background text-on-background">
-      {/* 顶部用户信息 + 登出按钮 */}
-      <div className="fixed top-4 right-4 z-[100] flex items-center gap-2 bg-surface-low/80 backdrop-blur-md px-3 py-2 rounded-xl border border-outline-variant/20">
-        <span className="text-xs text-on-surface-variant truncate max-w-[150px]">
-          {currentUser.email}
-        </span>
-        <button
-          onClick={handleLogout}
-          className="p-1.5 hover:bg-secondary/20 rounded-lg transition-colors"
-          title="退出登录"
-        >
-          <LogOut className="w-4 h-4 text-on-surface-variant" />
-        </button>
-      </div>
-
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-xl shadow-2xl text-sm font-bold transition-all ${
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-xl shadow-2xl text-sm font-bold transition-all ${
           toast.type === 'success' 
             ? 'bg-secondary/90 text-background' 
             : 'bg-red-500/90 text-white'
@@ -266,6 +271,7 @@ export default function App() {
           fetchMembers={fetchMembers}
           findMemberByPhone={handleFindMemberByPhone}
           refreshTodayCount={handleRefreshTodayCount}
+          onLogout={handleLogout}
         />
       )}
       {currentView === 'details' && selectedMember && (
@@ -304,19 +310,19 @@ export default function App() {
           onClick={() => setCurrentView('management')}
           className={`px-3 py-1 text-[10px] rounded ${currentView === 'management' ? 'bg-primary text-background' : 'text-primary'}`}
         >
-          商家端-列表
+          商家端 - 列表
         </button>
         <button
           onClick={() => selectedMember && setCurrentView('details')}
           className={`px-3 py-1 text-[10px] rounded ${currentView === 'details' ? 'bg-primary text-background' : 'text-primary'}`}
         >
-          商家端-详情
+          商家端 - 详情
         </button>
         <button
           onClick={() => setCurrentView('purchase')}
           className={`px-3 py-1 text-[10px] rounded ${currentView === 'purchase' ? 'bg-primary text-background' : 'text-primary'}`}
         >
-          用户端-购买
+          用户端 - 购买
         </button>
       </div> */}
     </div>

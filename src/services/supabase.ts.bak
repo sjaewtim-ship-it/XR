@@ -111,7 +111,7 @@ export async function createMember(
 
   // 写入记录（使用真实 operator）
   if (data) {
-    await addRecord(data.id, 'recharge', count, 0, operator);
+    addRecord(data.id, 'recharge', count, 0, operator);
   }
 
   return data;
@@ -161,7 +161,7 @@ export async function rechargeMember(
   }
 
   // 写入记录（使用真实 operator）
-  await addRecord(memberId, 'recharge', addCount, 0, operator);
+  addRecord(memberId, 'recharge', addCount, 0, operator);
 
   return data;
 }
@@ -229,7 +229,7 @@ export async function consumeOnce(
     return null;
   }
 
-  await addRecord(memberId, 'consume', -1, 0, operator);
+  addRecord(memberId, 'consume', -1, 0, operator);
 
   return data;
 }
@@ -281,7 +281,7 @@ export async function adjustCount(
     return null;
   }
 
-  await addRecord(
+  addRecord(
     memberId,
     delta > 0 ? 'recharge' : 'consume',
     delta,

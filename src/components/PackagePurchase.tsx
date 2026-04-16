@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Phone, User, CheckCircle, Info, Wallet } from 'lucide-react';
+import { ArrowLeft, Phone, User, Info, Wallet } from 'lucide-react';
 import { Member } from '../types';
-import { motion } from 'motion/react';
 
 interface Props {
   onBack: () => void;
@@ -28,56 +27,41 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
-    // 校验
-    const nameErr = validateName(name);
-    const phoneErr = validatePhone(phone);
+    if (isSubmitting) return;
+
+    const cleanName = name.trim();
+    const cleanPhone = phone.replace(/\s/g, '');
+
+    const nameErr = validateName(cleanName);
+    const phoneErr = validatePhone(cleanPhone);
     setNameError(nameErr);
     setPhoneError(phoneErr);
+
     if (nameErr || phoneErr) return;
 
     setIsSubmitting(true);
     try {
-      await onCreateOrRecharge(name.trim(), phone.replace(/\s/g, ''), 5);
-      setSuccess(true);
+      await onCreateOrRecharge(cleanName, cleanPhone, 5);
+      // 成功后直接返回，不再走 success 局部页，减少渲染切换风险
+      onBack();
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-8">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
-          <div className="w-20 h-20 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-secondary" />
-          </div>
-          <h2 className="text-2xl font-headline font-bold text-primary mb-2">购买成功！</h2>
-          <p className="text-on-surface-variant mb-2">{name} 已获得 5 次体验</p>
-          <p className="text-on-surface-variant/60 text-sm mb-8">手机号：{phone}</p>
-          <button
-            onClick={onBack}
-            className="bg-primary text-background font-bold px-8 py-4 rounded-xl"
-          >
-            返回首页
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen pb-32">
       <header className="flex items-center h-16 px-4 w-full bg-background/80 backdrop-blur-xl fixed top-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent">
         <div className="flex items-center w-full justify-between relative">
-          <ArrowLeft onClick={onBack} className="w-6 h-6 text-primary active:scale-95 duration-200 cursor-pointer absolute left-0" />
-          <h1 className="font-headline font-bold text-lg tracking-tight text-primary w-full text-center">购买套餐</h1>
+          <ArrowLeft
+            onClick={onBack}
+            className="w-6 h-6 text-primary active:scale-95 duration-200 cursor-pointer absolute left-0"
+          />
+          <h1 className="font-headline font-bold text-lg tracking-tight text-primary w-full text-center">
+            购买套餐
+          </h1>
         </div>
       </header>
 
@@ -103,6 +87,7 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
               会员信息
             </h3>
           </div>
+
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs text-on-surface-variant ml-1">姓名</label>
@@ -115,11 +100,15 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
                   placeholder="请输入姓名"
                   type="text"
                   value={name}
-                  onChange={(e) => { setName(e.target.value); setNameError(null); }}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (nameError) setNameError(null);
+                  }}
                 />
               </div>
               {nameError && <p className="text-red-400 text-xs ml-1">{nameError}</p>}
             </div>
+
             <div className="space-y-1.5">
               <label className="text-xs text-on-surface-variant ml-1">手机号</label>
               <div className="relative">
@@ -131,7 +120,10 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
                   placeholder="请输入手机号"
                   type="tel"
                   value={phone}
-                  onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 11)); setPhoneError(null); }}
+                  onChange={(e) => {
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 11));
+                    if (phoneError) setPhoneError(null);
+                  }}
                 />
               </div>
               {phoneError && <p className="text-red-400 text-xs ml-1">{phoneError}</p>}
@@ -144,19 +136,30 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
             <span className="w-1 h-5 bg-secondary rounded-full" />
             <h3 className="text-lg font-bold text-on-surface">XR科普漫游空间-5次卡套餐</h3>
           </div>
+
           <div className="bg-surface-lowest/50 rounded-xl p-5 space-y-4">
             <p className="text-sm text-primary font-medium">包含体验项目：</p>
             <ul className="grid grid-cols-1 gap-3">
-              {['埃菲尔铁塔云游记', '恐龙时代大冒险', '嫦娥探月大冒险', '深海寻宝大冒险', '万里长城大作战', '烈火逃生大冒险'].map((item) => (
+              {[
+                '埃菲尔铁塔云游记',
+                '恐龙时代大冒险',
+                '嫦娥探月大冒险',
+                '深海寻宝大冒险',
+                '万里长城大作战',
+                '烈火逃生大冒险',
+              ].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-on-surface-variant text-sm">
                   <span className="text-secondary font-bold">✔</span>
                   {item}
                 </li>
               ))}
             </ul>
+
             <div className="pt-4 mt-2 border-t border-outline-variant/30 flex items-start gap-2">
               <Info className="w-4 h-4 text-outline mt-0.5" />
-              <p className="text-[12px] text-outline leading-relaxed">说明：主题任选，每次扣减1次。本套餐一经售出，支持线下体验使用。</p>
+              <p className="text-[12px] text-outline leading-relaxed">
+                说明：主题任选，每次扣减1次。本套餐一经售出，支持线下体验使用。
+              </p>
             </div>
           </div>
         </section>
@@ -169,6 +172,7 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
               <span className="text-secondary font-headline text-5xl font-extrabold tracking-tighter">198</span>
             </div>
           </div>
+
           <div className="text-right pb-1">
             <div className="inline-flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_#a9c7ff]" />
@@ -184,17 +188,16 @@ export default function PackagePurchase({ onBack, onCreateOrRecharge }: Props) {
             <p className="text-outline text-xs">实付金额</p>
             <p className="text-secondary font-headline font-bold text-xl">¥198.00</p>
           </div>
+
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex-1 bg-gradient-to-r from-accent to-secondary text-on-background font-bold py-4 rounded-xl shadow-[0_4px_20px_rgba(253,139,0,0.3)] active:scale-95 transition-all duration-200 text-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 bg-gradient-to-r from-accent to-secondary text-on-background font-bold py-4 rounded-xl shadow-[0_4px_20px_rgba(253,139,0,0.3)] active:scale-95 transition-all duration-200 text-lg flex items-center justify-center disabled:opacity-50"
           >
-            {isSubmitting ? '处理中...' : (
-              <>
-                立即支付
-                <Wallet className="w-5 h-5" />
-              </>
-            )}
+            <span className="inline-flex items-center justify-center gap-2">
+              <span>{isSubmitting ? '处理中...' : '立即支付'}</span>
+              {!isSubmitting && <Wallet className="w-5 h-5" />}
+            </span>
           </button>
         </div>
       </footer>

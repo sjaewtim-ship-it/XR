@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Star, Bolt, PlusCircle, MinusCircle, Wallet, Rocket, Award } from 'lucide-react';
 import { Member, DisplayRecord, maskPhone } from '../types';
 import { motion } from 'motion/react';
@@ -31,20 +31,21 @@ export default function MemberDetails({
   const [subtractCount, setSubtractCount] = useState(1);
   const [activeTab, setActiveTab] = useState<'all' | 'recharge' | 'consume'>('all');
 
-  useEffect(() => {
-    onGetRecords(member.id).then(setRecords);
+  // 刷新记录（提取成稳定函数，方便首次加载和操作成功后复用）
+  const refreshRecords = useCallback(async () => {
+    const latestRecords = await onGetRecords(member.id);
+    setRecords(latestRecords);
   }, [member.id, onGetRecords]);
 
-  // 刷新记录
-  const refreshRecords = () => {
-    onGetRecords(member.id).then(setRecords);
-  };
+  useEffect(() => {
+    refreshRecords();
+  }, [refreshRecords]);
 
   // 消费 1 次
   const handleConsume = async () => {
     const updated = await onConsumeOnce(member.id);
     if (updated) {
-      refreshRecords();
+      await refreshRecords();
       onActionSuccess?.();
     }
   };
@@ -55,7 +56,7 @@ export default function MemberDetails({
     if (updated) {
       setShowAddModal(false);
       setCustomCount(5);
-      refreshRecords();
+      await refreshRecords();
       onActionSuccess?.();
     }
   };
@@ -67,7 +68,7 @@ export default function MemberDetails({
     if (updated) {
       setShowSubtractModal(false);
       setSubtractCount(1);
-      refreshRecords();
+      await refreshRecords();
       onActionSuccess?.();
     }
   };

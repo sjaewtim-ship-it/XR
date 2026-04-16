@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ChevronRight, UserPlus } from 'lucide-react';
+import { Search, ChevronRight, UserPlus, LogOut } from 'lucide-react';
 import { Member, maskPhone } from '../types';
 import { supabase } from '../services/supabase';
 import { motion } from 'motion/react';
@@ -10,9 +10,10 @@ interface Props {
   fetchMembers: () => Promise<Member[]>;
   findMemberByPhone: (phone: string) => Promise<Member | null>;
   refreshTodayCount?: () => void;
+  onLogout?: () => void;
 }
 
-export default function MemberManagement({ onSelectMember, onAddMember, fetchMembers, findMemberByPhone, refreshTodayCount }: Props) {
+export default function MemberManagement({ onSelectMember, onAddMember, fetchMembers, findMemberByPhone, refreshTodayCount, onLogout }: Props) {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -93,9 +94,20 @@ export default function MemberManagement({ onSelectMember, onAddMember, fetchMem
 
   return (
     <div className="min-h-screen pb-24">
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex items-center h-16 px-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent justify-center">
-        <h1 className="font-headline font-bold text-lg tracking-tight text-primary">XR科普漫游空间-会员管理平台</h1>
+      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex items-center justify-between h-16 px-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-primary/10 to-transparent">
+        <h1 className="font-headline font-bold text-lg tracking-tight text-primary">XR 科普漫游空间 - 会员管理平台</h1>
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="p-2 hover:bg-secondary/20 rounded-lg transition-colors flex items-center gap-2"
+            title="退出登录"
+          >
+            <LogOut className="w-4 h-4 text-on-surface-variant" />
+            <span className="text-xs text-on-surface-variant font-medium">退出</span>
+          </button>
+        )}
       </header>
+
 
       <main className="pt-20 px-4 max-w-2xl mx-auto">
         <div className="relative mb-6">
